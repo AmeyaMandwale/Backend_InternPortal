@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Backend_Project.Models
+namespace InternConnect_Backend.Models
 {
     public class User
     {
@@ -15,8 +15,8 @@ namespace Backend_Project.Models
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        public string PasswordHash { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
 
-      
+
     }
 }
