@@ -32,21 +32,23 @@ namespace Backend_InternPortal.Controllers
         }
 
         // ✅ Get Profile by Id (with nested data)
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Profile>> GetProfile(int id)
+        // GET Profile by UserId (with nested data)
+        [HttpGet("user/{userid}")]
+        public async Task<ActionResult<Profile>> GetProfile(int userid)
         {
             var profile = await _context.Profiles
                 .Include(p => p.Educations)
                 .Include(p => p.Skills)
                 .Include(p => p.Projects)
                 .Include(p => p.Achievements)
-                .FirstOrDefaultAsync(p => p.ProfileId == id);
+                .FirstOrDefaultAsync(p => p.UserId == userid);
 
             if (profile == null)
-                return NotFound();
+                return NotFound(new { message = $"No profile found for UserId {userid}" });
 
             return profile;
         }
+
 
         // ✅ Create Profile with nested entities
         [HttpPost]
@@ -59,21 +61,19 @@ namespace Backend_InternPortal.Controllers
         }
 
         // ✅ Update Profile with nested entities
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProfile(int id, Profile profile)
+        // PUT: Update profile by UserId (with nested entities)
+        [HttpPut("{userid}")]
+        public async Task<IActionResult> UpdateProfileByUserId(int userid, Profile profile)
         {
-            if (id != profile.ProfileId)
-                return BadRequest();
-
             var existingProfile = await _context.Profiles
                 .Include(p => p.Educations)
                 .Include(p => p.Skills)
                 .Include(p => p.Projects)
                 .Include(p => p.Achievements)
-                .FirstOrDefaultAsync(p => p.ProfileId == id);
+                .FirstOrDefaultAsync(p => p.UserId == userid);
 
             if (existingProfile == null)
-                return NotFound();
+                return NotFound(new { message = $"No profile found for UserId {userid}" });
 
             // --- Update scalar fields ---
             _context.Entry(existingProfile).CurrentValues.SetValues(profile);
@@ -109,6 +109,7 @@ namespace Backend_InternPortal.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
 
         // ✅ Delete Profile (and nested entities by cascade)
         [HttpDelete("{id}")]
