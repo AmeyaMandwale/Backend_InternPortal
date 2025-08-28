@@ -49,7 +49,7 @@ namespace InternConnect_Backend.Models
         public string LinkedIn { get; set; } = string.Empty;
 
         public string Github { get; set; } = string.Empty;
-
+        
         // Collections
         public ICollection<Education> Educations { get; set; } = new List<Education>();
         public ICollection<Skill> Skills { get; set; } = new List<Skill>();
