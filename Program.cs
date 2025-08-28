@@ -59,10 +59,13 @@ namespace Backend_InternPortal
                     };
                 });
 
+
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll",
-                    policy => policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+                options.AddPolicy("AllowFrontend",
+                    policy => policy.WithOrigins("http://localhost:3000")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
             });
 
             var app = builder.Build();
@@ -74,11 +77,11 @@ namespace Backend_InternPortal
                 app.UseSwaggerUI();
             }
 
-            app.UseCors("AllowAll");
+            app.UseCors("AllowFrontend");
             
 
 
-            app.UseHttpsRedirection();
+           // app.UseHttpsRedirection();
             app.UseRouting();
 
             app.UseAuthentication(); // ?? MUST be before UseAuthorization
