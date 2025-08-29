@@ -37,7 +37,7 @@ namespace InternConnect_Backend.Models
 
         public bool IsApplied { get; set; } = false;
 
-        public string Status { get; set; } = "Open";   // e.g., "Open", "Closed", "Selected"
+        public string Status { get; set; } = "None";   // e.g., "Open", "Closed", "Selected"
 
         public string ApplyLink { get; set; } = string.Empty;  // URL for application
 
