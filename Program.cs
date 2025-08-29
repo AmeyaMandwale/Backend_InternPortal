@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using InternConnect_Backend.Data;
+using InternConnect_Backend.Services;
 
 namespace Backend_InternPortal
 {
@@ -28,6 +29,8 @@ namespace Backend_InternPortal
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpClient(); // added new
+            builder.Services.AddHttpClient<SerpApiService>();
+
 
             builder.WebHost.ConfigureKestrel(options =>
             {
