@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+
+
+
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using InternConnect_Backend.Data;
 using InternConnect_Backend.Models;
@@ -31,10 +36,26 @@ namespace Backend_InternPortal.Controllers
                 .ToListAsync();
         }
 
-        // ✅ Get Profile by Id (with nested data)
-        // GET Profile by UserId (with nested data)
+        // ✅ Get Profile by ProfileId
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Profile>> GetProfileById(int id)
+        {
+            var profile = await _context.Profiles
+                .Include(p => p.Educations)
+                .Include(p => p.Skills)
+                .Include(p => p.Projects)
+                .Include(p => p.Achievements)
+                .FirstOrDefaultAsync(p => p.ProfileId == id);
+
+            if (profile == null)
+                return NotFound(new { message = $"No profile found with ProfileId {id}" });
+
+            return profile;
+        }
+
+        // ✅ Get Profile by UserId
         [HttpGet("user/{userid}")]
-        public async Task<ActionResult<Profile>> GetProfile(int userid)
+        public async Task<ActionResult<Profile>> GetProfileByUserId(int userid)
         {
             var profile = await _context.Profiles
                 .Include(p => p.Educations)
@@ -49,7 +70,6 @@ namespace Backend_InternPortal.Controllers
             return profile;
         }
 
-
         // ✅ Create Profile with nested entities
         [HttpPost]
         public async Task<ActionResult<Profile>> CreateProfile(Profile profile)
@@ -57,11 +77,11 @@ namespace Backend_InternPortal.Controllers
             _context.Profiles.Add(profile);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetProfile), new { id = profile.ProfileId }, profile);
+            // ✅ Now points to GetProfileById (ProfileId route)
+            return CreatedAtAction(nameof(GetProfileById), new { id = profile.ProfileId }, profile);
         }
 
-        // ✅ Update Profile with nested entities
-        // PUT: Update profile by UserId (with nested entities)
+        // ✅ Update Profile with nested entities (by UserId)
         [HttpPut("{userid}")]
         public async Task<IActionResult> UpdateProfileByUserId(int userid, Profile profile)
         {
@@ -109,7 +129,6 @@ namespace Backend_InternPortal.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
-
 
         // ✅ Delete Profile (and nested entities by cascade)
         [HttpDelete("{id}")]

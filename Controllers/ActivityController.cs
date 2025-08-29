@@ -167,7 +167,7 @@ Career Goal: {profile.CareerGoal}
                 .ToListAsync();
 
             if (activities == null || !activities.Any())
-                return NotFound($"No activities found for UserId {userId}");
+                return NotFound(new { message = $"No Activity found for UserId {userId}" });
 
             return Ok(activities);
         }
