@@ -42,6 +42,16 @@ namespace Backend_InternPortal.Controllers
             if (profile == null)
                 return NotFound("Profile not found for given UserId");
 
+
+            // 🔹 Remove existing activities for this user
+            var existingActivities = _context.Activities.Where(a => a.UserId == request.UserId);
+            if (existingActivities.Any())
+            {
+                _context.Activities.RemoveRange(existingActivities);
+                await _context.SaveChangesAsync();
+            }
+
+
             // 2. Serialize profile safely
             var profileJson = JsonConvert.SerializeObject(profile,
                 Formatting.None,
@@ -157,7 +167,7 @@ Career Goal: {profile.CareerGoal}
                 .ToListAsync();
 
             if (activities == null || !activities.Any())
-                return NotFound($"No activities found for UserId {userId}");
+                return NotFound(new { message = $"No Activity found for UserId {userId}" });
 
             return Ok(activities);
         }
