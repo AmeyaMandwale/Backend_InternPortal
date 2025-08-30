@@ -35,10 +35,10 @@ namespace Backend_InternPortal
             builder.WebHost.ConfigureKestrel(options =>
             {
                 options.ListenAnyIP(5156); // HTTP
-                //options.ListenAnyIP(7031, listenOptions => // HTTPS
-                //{
-                //    listenOptions.UseHttps();
-                //});
+                options.ListenAnyIP(7031, listenOptions => // HTTPS
+                {
+                    listenOptions.UseHttps();
+                });
             });
             // ? Database config
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

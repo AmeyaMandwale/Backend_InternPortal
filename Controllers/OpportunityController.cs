@@ -26,26 +26,7 @@ namespace Backend_Project.Controllers
 
         }
 
-        // ✅ GET: api/Opportunity
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Opportunity>>> GetOpportunities()
-        {
-            return await _context.Opportunities.ToListAsync();
-        }
-
-        // ✅ GET: api/Opportunity/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Opportunity>> GetOpportunity(int id)
-        {
-            var opportunity = await _context.Opportunities.FindAsync(id);
-
-            if (opportunity == null)
-            {
-                return NotFound(new { message = "Opportunity not found." });
-            }
-
-            return opportunity;
-        }
+       
 
         // ✅ GET: api/Opportunity/user/3 → all opportunities of a user
         [HttpGet("user/{userId}")]
@@ -58,21 +39,7 @@ namespace Backend_Project.Controllers
             return opportunities;
         }
 
-        // ✅ POST: api/Opportunity
-        [HttpPost]
-        public async Task<ActionResult<Opportunity>> CreateOpportunity(Opportunity opportunity)
-        {
-            // validate Status
-            if (!_validStatuses.Contains(opportunity.Status))
-            {
-                opportunity.Status = "None";
-            }
-
-            _context.Opportunities.Add(opportunity);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetOpportunity), new { id = opportunity.OpportunityId }, opportunity);
-        }
+      
 
         // ✅ PUT: api/Opportunity/5
         [HttpPut("{id}")]
@@ -119,64 +86,37 @@ namespace Backend_Project.Controllers
 
 
 
-        // ✅ DELETE: api/Opportunity/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOpportunity(int id)
-        {
-            var opportunity = await _context.Opportunities.FindAsync(id);
-            if (opportunity == null)
-            {
-                return NotFound(new { message = "Opportunity not found." });
-            }
 
-            _context.Opportunities.Remove(opportunity);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
 
         //// Controller for SerpAPI
-        //[ApiController]
-        //[Route("api/[controller]")]
-        //public class InternshipsController : ControllerBase
+ 
+
+        //[HttpGet("fetch-by-careergoal/{userId}")]
+        //public async Task<IActionResult> FetchByCareerGoal(int userId)
         //{
-        //    private readonly SerpApiService _serpApiService;
+        //    // Get the user’s profile
+        //    var profile = await _context.Profiles.FirstOrDefaultAsync(p => p.UserId == userId);
 
-        //    public InternshipsController(SerpApiService serpApiService)
+        //    if (profile == null || string.IsNullOrEmpty(profile.CareerGoal))
+        //        return NotFound("Profile or CareerGoal not found for this user");
+
+        //    // Use career goal as search query
+        //    string query = profile.CareerGoal;
+        //    string location = string.IsNullOrEmpty(profile.Location) ? "India" : profile.Location; // fallback to India
+
+        //    var opportunities = await _serpApiService.FetchOpportunitiesAsync(query, location, userId);
+
+        //    // Attach UserId to opportunities
+        //    foreach (var opp in opportunities)
         //    {
-        //        _serpApiService = serpApiService;
+        //        opp.UserId = userId;
         //    }
 
-        //    [HttpGet("fetch")]
-        //    public async Task<IActionResult> Fetch([FromQuery] string profile, [FromQuery] string location)
-        //    {
-        //        var data = await _serpApiService.FetchInternships(profile, location);
-        //        return Ok(data);
-        //    }
-        //}
-
-        //[HttpGet("fetch")]
-        //public async Task<ActionResult<IEnumerable<Opportunity>>> FetchFromSerpApi(
-        //   string query = "DevOps Engineer", string location = "India")
-        //{
-        //    var internships = await _serpApiService.FetchInternships(query, location);
-
-        //    // (Optional) Save them to your DB
-        //    foreach (var opp in internships)
-        //    {
-        //        // Avoid duplicates (basic check)
-        //        if (!_context.Opportunities.Any(o =>
-        //                o.Position == opp.Position &&
-        //                o.Company == opp.Company &&
-        //                o.Location == opp.Location))
-        //        {
-        //            _context.Opportunities.Add(opp);
-        //        }
-        //    }
-
+        //    // Save to DB
+        //    _context.Opportunities.AddRange(opportunities);
         //    await _context.SaveChangesAsync();
 
-        //    return Ok(internships);
+        //    return Ok(opportunities);
         //}
 
         [HttpGet("fetch-by-careergoal/{userId}")]
@@ -188,44 +128,75 @@ namespace Backend_Project.Controllers
             if (profile == null || string.IsNullOrEmpty(profile.CareerGoal))
                 return NotFound("Profile or CareerGoal not found for this user");
 
-            // Use career goal as search query
             string query = profile.CareerGoal;
-            string location = string.IsNullOrEmpty(profile.Location) ? "India" : profile.Location; // fallback to India
+            string location = "India"; // fixed location
 
-            var opportunities = await _serpApiService.FetchOpportunitiesAsync(query, location, userId);
+            // Fetch internships from external API (limit 10 results)
+            var opportunities = (await _serpApiService.FetchOpportunitiesAsync(query, location, userId))
+                .Take(10)
+                .ToList();
 
-            // Attach UserId to opportunities
+            // ✅ Fetch ALL existing opportunities for this user
+            var existingOpps = await _context.Opportunities
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
+
+            // Build a set of unique keys for faster lookup
+            var existingKeys = new HashSet<string>(
+                existingOpps.Select(o => $"{o.Position}-{o.Company}-{o.ApplyLink}"),
+                StringComparer.OrdinalIgnoreCase
+            );
+
+            var newOpportunities = new List<Opportunity>();
+
             foreach (var opp in opportunities)
             {
-                opp.UserId = userId;
+                string key = $"{opp.Position}-{opp.Company}-{opp.ApplyLink}";
+
+                if (!existingKeys.Contains(key))
+                {
+                    newOpportunities.Add(opp);
+                    existingKeys.Add(key); // avoid dupes in same batch
+                }
             }
 
-            // Save to DB
-            _context.Opportunities.AddRange(opportunities);
-            await _context.SaveChangesAsync();
+            // Save only non-duplicate new ones
+            if (newOpportunities.Any())
+            {
+                _context.Opportunities.AddRange(newOpportunities);
+                await _context.SaveChangesAsync();
+            }
 
-            return Ok(opportunities);
+            // ✅ Now fetch ALL opportunities again (including saved ones) 
+            // and filter them by fuzzy CareerGoal matching
+            var allOpportunities = await _context.Opportunities
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
+
+            var finalList = allOpportunities
+                .Where(o =>
+                    o.Position != null &&
+                    profile.CareerGoal != null &&
+                    (
+                        // fuzzy contains
+                        o.Position.Contains(profile.CareerGoal, StringComparison.OrdinalIgnoreCase) ||
+
+                        // partial token-based match (e.g., "DevOps" matches "DevOps Intern")
+                        profile.CareerGoal.Split(' ')
+                            .Any(token => o.Position.Contains(token, StringComparison.OrdinalIgnoreCase))
+                    )
+                )
+                .OrderByDescending(o => o.PostedDate)
+                .Take(10)
+                .ToList();
+
+            return Ok(finalList);
         }
 
 
-        //// ✅ Fetch internships from RapidAPI (internship-only data source)
-        //[HttpGet("fetch-internships/{userId}")]
-        //public async Task<IActionResult> FetchInternshipsFromRapidApi(int userId)
-        //{
-        //    // ✅ Include Profile to access CareerGoal
-        //    var userProfile = await _context.Profiles
-        //        .FirstOrDefaultAsync(p => p.UserId == userId);
 
-        //    if (userProfile == null)
-        //        return NotFound("Profile not found for this user.");
 
-        //    string careerGoal = userProfile.CareerGoal;
 
-        //    // ✅ Pass careerGoal to service
-        //    var internships = await _rapidApiService.FetchInternshipsAsync(careerGoal, "India", userId);
-
-        //    return Ok(internships);
-        //}
 
 
 
