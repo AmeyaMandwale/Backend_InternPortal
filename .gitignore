@@ -14,3 +14,35 @@ obj/
 
 
 *.csproj.user
+
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.csproj.user
+
+# Build artifacts
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Entity Framework Migrations
+[Mm]igrations/
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+*.cache
+*.pdb
+*.db
+
+.env
