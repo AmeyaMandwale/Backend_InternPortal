@@ -40,16 +40,21 @@ namespace InternConnect_Backend.Services
                     Position = job["title"]?.ToString() ?? string.Empty,
                     Company = job["company_name"]?.ToString() ?? string.Empty,
                     Location = job["location"]?.ToString() ?? string.Empty,
-                    Stipend = "", // SerpAPI doesn’t provide stipend
+                    Stipend = "",
                     PostedDate = ParsePostedDate(detectedExtensions?["posted_at"]?.ToString()),
                     Description = job["description"]?.ToString() ?? string.Empty,
                     IsSaved = false,
                     IsApplied = false,
                     Status = "Open",
                     ApplyLink = job["apply_options"]?.FirstOrDefault()?["link"]?.ToString() ?? string.Empty,
-                    Type = "Internship", // ✅ Force label as Internship
+                    Type = job["work_from_home"]?.ToString()?.ToLower() == "true"
+                 ? "Remote"
+                 : (job["location"]?.ToString()?.ToLower().Contains("remote") == true
+                     ? "Remote"
+                     : "On-site"), // 👈 dynamic mapping
                     CompanyWebsite = job["company_link"]?.ToString() ?? string.Empty
                 });
+
             }
 
             return internships;
