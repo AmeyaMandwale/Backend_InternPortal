@@ -86,6 +86,7 @@ namespace Backend_InternPortal.Controllers
             return Ok(new
             {
                 message = "Login successful",
+                name=user.Name,
                 userid = user.UserId,
                 email = user.Email,
                 token = jwt
