@@ -27,7 +27,7 @@ namespace InternConnect_Backend.Models
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [Phone]
+        
         public string Phone { get; set; } = string.Empty;
 
         public DateTime? DOB { get; set; }

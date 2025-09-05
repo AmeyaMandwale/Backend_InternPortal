@@ -172,11 +172,48 @@ Career Goal: {profile.CareerGoal}
             return Ok(activities);
         }
 
+
+
+
+
+        [HttpPut("{userId}/{activityId}")]
+        public async Task<IActionResult> UpdateActivityStatus(int userId, int activityId, [FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                // Find the activity by userId and activityId
+                var activity = await _context.Activities
+                    .FirstOrDefaultAsync(a => a.UserId == userId && a.ActivityId == activityId);
+
+                if (activity == null)
+                    return NotFound($"Activity with ID {activityId} for User ID {userId} not found");
+
+                // Update the status
+                activity.Status = request.Status;
+
+                // Save changes to the database
+                await _context.SaveChangesAsync();
+
+                return Ok(activity);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while updating the activity status: {ex.Message}");
+            }
+        }
+
+
+
     }
 
     public class GenerateActivitiesRequest
     {
         public int UserId { get; set; }       // The user for whom activities will be generated
         public int Count { get; set; } = 5;   // Number of activities to generate (default 5)
+    }
+
+    public class UpdateStatusRequest
+    {
+        public string Status { get; set; }
     }
 }
