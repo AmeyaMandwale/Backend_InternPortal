@@ -82,6 +82,58 @@ namespace Backend_InternPortal.Controllers
         }
 
         // ✅ Update Profile with nested entities (by UserId)
+        //[HttpPut("{userid}")]
+        //public async Task<IActionResult> UpdateProfileByUserId(int userid, Profile profile)
+        //{
+        //    var existingProfile = await _context.Profiles
+        //        .Include(p => p.Educations)
+        //        .Include(p => p.Skills)
+        //        .Include(p => p.Projects)
+        //        .Include(p => p.Achievements)
+        //        .FirstOrDefaultAsync(p => p.UserId == userid);
+
+        //    if (existingProfile == null)
+        //        return NotFound(new { message = $"No profile found for UserId {userid}" });
+
+        //    // --- Update scalar fields ---
+        //    _context.Entry(existingProfile).CurrentValues.SetValues(profile);
+
+        //    // --- Update Educations ---
+        //    existingProfile.Educations.Clear();
+        //    foreach (var edu in profile.Educations)
+        //    {
+        //        existingProfile.Educations.Add(edu);
+        //    }
+
+        //    // --- Update Skills ---
+        //    existingProfile.Skills.Clear();
+        //    foreach (var skill in profile.Skills)
+        //    {
+        //        existingProfile.Skills.Add(skill);
+        //    }
+
+        //    // --- Update Projects ---
+        //    existingProfile.Projects.Clear();
+        //    foreach (var proj in profile.Projects)
+        //    {
+        //        existingProfile.Projects.Add(proj);
+        //    }
+
+        //    // --- Update Achievements ---
+        //    existingProfile.Achievements.Clear();
+        //    foreach (var ach in profile.Achievements)
+        //    {
+        //        existingProfile.Achievements.Add(ach);
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //    return NoContent();
+        //}
+
+
+
+
+
         [HttpPut("{userid}")]
         public async Task<IActionResult> UpdateProfileByUserId(int userid, Profile profile)
         {
@@ -97,6 +149,12 @@ namespace Backend_InternPortal.Controllers
 
             // --- Update scalar fields ---
             _context.Entry(existingProfile).CurrentValues.SetValues(profile);
+
+            // ✅ Keep old photo if frontend sends empty string
+            if (string.IsNullOrEmpty(profile.Photo))
+            {
+                _context.Entry(existingProfile).Property(p => p.Photo).IsModified = false;
+            }
 
             // --- Update Educations ---
             existingProfile.Educations.Clear();
@@ -129,6 +187,7 @@ namespace Backend_InternPortal.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
 
         // ✅ Delete Profile (and nested entities by cascade)
         [HttpDelete("{id}")]
