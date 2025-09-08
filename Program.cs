@@ -30,6 +30,7 @@ namespace Backend_InternPortal
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpClient(); // added new
             builder.Services.AddHttpClient<SerpApiService>();
+            builder.Services.AddHostedService<OpportunityRefreshService>();
 
 
             builder.WebHost.ConfigureKestrel(options =>
