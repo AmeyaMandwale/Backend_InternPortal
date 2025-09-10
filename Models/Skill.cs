@@ -17,7 +17,7 @@ namespace InternConnect_Backend.Models
         [JsonIgnore]
         public Profile? Profile { get; set; }   // Navigation property
 
-        [Required]
+        
         public string Technical { get; set; } = string.Empty;  // e.g., C#, Java, React
 
         public string Tools { get; set; } = string.Empty;      // e.g., Git, Docker, VS Code
