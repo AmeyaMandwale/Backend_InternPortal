@@ -21,7 +21,7 @@ namespace InternConnect_Backend.Models
         [Required]
         public string Degree { get; set; } = string.Empty;
 
-        [Required]
+       
         public string Branch { get; set; } = string.Empty;
 
         [Required]

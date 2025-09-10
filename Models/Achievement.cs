@@ -23,9 +23,10 @@ namespace InternConnect_Backend.Models
 
         public string Issuer { get; set; } = string.Empty;  // e.g., "Microsoft, College, etc."
 
-        [Range(1900, 2100)]
+        
         public int Year { get; set; }    // e.g., 2023
 
+        [Required]
         public string Description { get; set; } = string.Empty;
     }
 }
