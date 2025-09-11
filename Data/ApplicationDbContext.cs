@@ -21,6 +21,12 @@ namespace InternConnect_Backend.Data
         public DbSet<Opportunity> Opportunities { get; set; }
         public DbSet<Activity> Activities { get; set; }
 
+        public DbSet<SkillGapAnalysis> SkillGapAnalyses { get; set; }
+
+        public DbSet<CareerTip> CareerTips { get; set; }
+
+
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,6 +69,16 @@ namespace InternConnect_Backend.Data
                 .HasForeignKey(u => u.UserId);
 
             modelBuilder.Entity<Activity>()
+                .HasOne(u => u.User)
+                .WithMany()
+                .HasForeignKey(u => u.UserId);
+
+            modelBuilder.Entity<SkillGapAnalysis>()
+                .HasOne(u => u.User)
+                .WithMany()
+                .HasForeignKey(u => u.UserId);
+
+            modelBuilder.Entity<CareerTip>()
                 .HasOne(u => u.User)
                 .WithMany()
                 .HasForeignKey(u => u.UserId);
