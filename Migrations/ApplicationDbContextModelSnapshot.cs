@@ -96,6 +96,28 @@ namespace Backend_Project.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.CareerTip", b =>
+                {
+                    b.Property<int>("CareerTipId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("CareerTipId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CareerTipId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CareerTips");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.Education", b =>
                 {
                     b.Property<int>("EducationId")
@@ -331,6 +353,36 @@ namespace Backend_Project.Migrations
                     b.ToTable("Skills");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.SkillGapAnalysis", b =>
+                {
+                    b.Property<int>("SkillGapAnalysisId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SkillGapAnalysisId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ResourceLink")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SkillGapAnalysisId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("SkillGapAnalyses");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.User", b =>
                 {
                     b.Property<int>("UserId")
@@ -368,6 +420,17 @@ namespace Backend_Project.Migrations
                 });
 
             modelBuilder.Entity("InternConnect_Backend.Models.Activity", b =>
+                {
+                    b.HasOne("InternConnect_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InternConnect_Backend.Models.CareerTip", b =>
                 {
                     b.HasOne("InternConnect_Backend.Models.User", "User")
                         .WithMany()
@@ -431,6 +494,17 @@ namespace Backend_Project.Migrations
                         .IsRequired();
 
                     b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("InternConnect_Backend.Models.SkillGapAnalysis", b =>
+                {
+                    b.HasOne("InternConnect_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InternConnect_Backend.Models.Profile", b =>
