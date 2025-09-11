@@ -263,6 +263,13 @@ namespace Backend_Project.Controllers
             if (profile == null || string.IsNullOrEmpty(profile.CareerGoal))
                 return NotFound("Profile or CareerGoal not found for this user");
 
+            // --- Split career goals by comma ---
+            var careerGoals = profile.CareerGoal
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(c => c.Trim())
+                .Where(c => !string.IsNullOrEmpty(c))
+                .ToList();
+
             // --- 1) Load saved/applied keys ---
             var savedAppliedKeys = await _context.Opportunities
                 .Where(o => o.UserId == userId && (o.IsSaved || o.IsApplied))
@@ -274,7 +281,7 @@ namespace Backend_Project.Controllers
 
             var savedAppliedSet = new HashSet<string>(savedAppliedKeys, StringComparer.OrdinalIgnoreCase);
 
-            // --- 2) Cleanup: delete ALL old unsaved/unapplied ---
+            // --- 2) Cleanup old unsaved/unapplied ---
             var old = await _context.Opportunities
                 .Where(o => o.UserId == userId && !o.IsSaved && !o.IsApplied)
                 .ToListAsync();
@@ -284,32 +291,62 @@ namespace Backend_Project.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // --- 3) Fetch fresh opportunities ---
-            var rawFresh = await _serpApiService.FetchOpportunitiesAsync(profile.CareerGoal, "India", userId);
-            if (rawFresh == null) rawFresh = new List<Opportunity>();
+            // --- 3) Decide allocation of opportunities ---
+            var allocations = new List<int>();
+            if (careerGoals.Count == 1)
+            {
+                allocations.Add(10);
+            }
+            else if (careerGoals.Count == 2)
+            {
+                allocations.AddRange(new[] { 5, 5 });
+            }
+            else if (careerGoals.Count >= 3)
+            {
+                // Randomly pick one of the 3 valid distributions
+                var rand = new Random();
+                var distributions = new List<int[]> {
+            new[] {4, 3, 3},
+            new[] {3, 4, 3},
+            new[] {3, 3, 4}
+        };
+                allocations.AddRange(distributions[rand.Next(distributions.Count)]);
+            }
 
-            // --- 4) Deduplicate ---
+            // --- 4) Fetch opportunities for each career goal separately ---
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var finalFresh = new List<Opportunity>();
 
-            foreach (var opp in rawFresh)
+            for (int i = 0; i < allocations.Count; i++)
             {
-                var key = !string.IsNullOrWhiteSpace(opp.ApplyLink)
-                    ? NormalizeLink(opp.ApplyLink)
-                    : BuildPosCompKey(opp.Position, opp.Company);
+                var goal = careerGoals[i];
+                var countNeeded = allocations[i];
+                int addedCount = 0;
 
-                if (string.IsNullOrWhiteSpace(key)) continue;
-                if (savedAppliedSet.Contains(key)) continue; // don't show saved/applied in Recommended
-                if (seen.Contains(key)) continue;
+                var rawFresh = await _serpApiService.FetchOpportunitiesAsync(goal, "India", userId);
+                if (rawFresh == null) rawFresh = new List<Opportunity>();
 
-                opp.UserId = userId;
-                opp.IsSaved = false;
-                opp.IsApplied = false;
-                opp.Status = "None";
-                finalFresh.Add(opp);
-                seen.Add(key);
+                foreach (var opp in rawFresh)
+                {
+                    var key = !string.IsNullOrWhiteSpace(opp.ApplyLink)
+                        ? NormalizeLink(opp.ApplyLink)
+                        : BuildPosCompKey(opp.Position, opp.Company);
 
-                if (finalFresh.Count >= 10) break;
+                    if (string.IsNullOrWhiteSpace(key)) continue;
+                    if (savedAppliedSet.Contains(key)) continue;
+                    if (seen.Contains(key)) continue;
+
+                    opp.UserId = userId;
+                    opp.IsSaved = false;
+                    opp.IsApplied = false;
+                    opp.Status = "None";
+                    finalFresh.Add(opp);
+                    seen.Add(key);
+                    addedCount++;
+
+                    if (addedCount >= countNeeded)
+                        break;
+                }
             }
 
             // --- 5) Insert fresh opportunities into DB ---
@@ -319,7 +356,7 @@ namespace Backend_Project.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // --- 6) Build Recommended (ONLY today’s 10 fresh, not mixing with DB old) ---
+            // --- 6) Build Recommended DTO ---
             var recommendedDto = finalFresh
                 .Select(o => new {
                     opportunityId = o.OpportunityId,
@@ -329,8 +366,8 @@ namespace Backend_Project.Controllers
                     stipend = o.Stipend,
                     description = o.Description,
                     posted = o.PostedDate != DateTime.MinValue
-                    ? o.PostedDate.ToString("o") // ✅ correct handling
-                   : null,
+                        ? o.PostedDate.ToString("o")
+                        : null,
                     isSaved = o.IsSaved,
                     isApplied = o.IsApplied,
                     status = o.Status,
