@@ -53,7 +53,7 @@ namespace Backend_InternPortal.Controllers
             // 3. Build user prompt
             var userPrompt = $@"
 Generate {request.Count} career tips for the following profile.
-Each tip must follow this JSON schema and tip should have 10 to 15 words and keep CareerTipId = 0 every time :
+Each tip must follow this JSON schema and tip should have 10 to 15 words and keep CareerTipId = 0 every time :  
 
 [
   {{

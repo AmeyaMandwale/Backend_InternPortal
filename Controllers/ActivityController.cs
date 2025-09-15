@@ -31,6 +31,9 @@ namespace Backend_InternPortal.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateActivities([FromBody] GenerateActivitiesRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.ActivityGoal))
+                return BadRequest("ActivityGoal cannot be empty.");
+
             // 1. Fetch complete profile
             var profile = await _context.Profiles
                 .Include(p => p.Educations)
@@ -42,24 +45,44 @@ namespace Backend_InternPortal.Controllers
             if (profile == null)
                 return NotFound("Profile not found for given UserId");
 
+            // 2. Delete existing activities for the current ActivityGoal
+            var existingActivities = _context.Activities
+                .Where(a => a.UserId == request.UserId && a.ActivityGoal == request.ActivityGoal);
 
-            // 🔹 Remove existing activities for this user
-            var existingActivities = _context.Activities.Where(a => a.UserId == request.UserId);
             if (existingActivities.Any())
             {
                 _context.Activities.RemoveRange(existingActivities);
                 await _context.SaveChangesAsync();
             }
 
+            // 3. Delete obsolete activities not in current CareerGoal and not the current ActivityGoal
+            if (!string.IsNullOrWhiteSpace(profile.CareerGoal))
+            {
+                var activeGoals = profile.CareerGoal
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(g => g.Trim())
+                    .ToList();
 
-            // 2. Serialize profile safely
+                var obsoleteActivities = _context.Activities
+                    .Where(a => a.UserId == request.UserId
+                                && !activeGoals.Contains(a.ActivityGoal)
+                                && a.ActivityGoal != request.ActivityGoal);
+
+                if (obsoleteActivities.Any())
+                {
+                    _context.Activities.RemoveRange(obsoleteActivities);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // 4. Serialize profile safely
             var profileJson = JsonConvert.SerializeObject(profile,
                 Formatting.None,
                 new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
-            // 3. Build user prompt
+            // 5. Build user prompt
             var userPrompt = $@"
-Generate {request.Count} career development activities for the following profile.
+Generate {request.Count} career development activities for the following profile and goal.
 Each activity must follow this JSON schema and keep ActivityId = 0 everytime :
 
 [
@@ -71,15 +94,16 @@ Each activity must follow this JSON schema and keep ActivityId = 0 everytime :
     ""Description"": ""string"",
     ""ResourceLink"": ""string"",
     ""EstimatedTime"": ""string"",
-    ""Status"": ""Pending""
+    ""Status"": ""Pending"",
+    ""ActivityGoal"": ""{request.ActivityGoal}""
   }}
 ]
 
 Profile Data: {profileJson}
-Career Goal: {profile.CareerGoal}
+Activity Goal: {request.ActivityGoal}
 ";
 
-            // 4. Call Gemini API (correct payload)
+            // 6. Call Gemini API
             var geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_config["Gemini:ApiKey"]}";
 
             var payload = new
@@ -115,7 +139,7 @@ Career Goal: {profile.CareerGoal}
 
             string aiContent = geminiResponse.candidates[0].content.parts[0].text.ToString();
 
-            // 5. Clean AI response (strip ```json fences if present)
+            // 7. Clean AI response
             aiContent = aiContent.Trim();
             if (aiContent.StartsWith("```"))
             {
@@ -125,7 +149,7 @@ Career Goal: {profile.CareerGoal}
                     aiContent = aiContent.Substring(firstNewLine + 1, lastFence - firstNewLine - 1).Trim();
             }
 
-            // 6. Deserialize into Activities
+            // 8. Deserialize into Activities
             List<Activity>? activities;
             try
             {
@@ -139,22 +163,22 @@ Career Goal: {profile.CareerGoal}
             if (activities == null || !activities.Any())
                 return BadRequest("No activities parsed from AI response");
 
-            // 7. Ensure UserId & defaults
+            // 9. Ensure UserId, ActivityGoal, and defaults
             foreach (var activity in activities)
             {
                 activity.UserId = request.UserId;
+                activity.ActivityGoal = request.ActivityGoal;
                 if (string.IsNullOrWhiteSpace(activity.Status))
                     activity.Status = "Pending";
             }
 
-            // 8. Save activities to DB
+            // 10. Save activities to DB
             _context.Activities.AddRange(activities);
             await _context.SaveChangesAsync();
 
-            // 9. Return saved activities
+            // 11. Return saved activities
             return Ok(activities);
         }
-
 
 
 
@@ -210,6 +234,7 @@ Career Goal: {profile.CareerGoal}
     {
         public int UserId { get; set; }       // The user for whom activities will be generated
         public int Count { get; set; } = 5;   // Number of activities to generate (default 5)
+        public string ActivityGoal { get; set; } = string.Empty;
     }
 
     public class UpdateStatusRequest
