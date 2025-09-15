@@ -32,5 +32,7 @@ namespace InternConnect_Backend.Models
         public string EstimatedTime { get; set; } = string.Empty; // e.g., "2 hours", "3 days"
 
         public string Status { get; set; } = "Pending"; // Default: Pending, can be Completed/In-progress
+
+        public string ActivityGoal { get; set; } = string.Empty;
     }
 }
