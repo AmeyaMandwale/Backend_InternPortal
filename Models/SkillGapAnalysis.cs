@@ -23,5 +23,8 @@ namespace InternConnect_Backend.Models
         public string Description { get; set; } = string.Empty; // Detailed description
 
         public string ResourceLink { get; set; } = string.Empty;  // URL to docs, tutorials, etc.
+
+        public string SkillGapAnalysisGoal { get; set; } = string.Empty;
+
     }
 }
