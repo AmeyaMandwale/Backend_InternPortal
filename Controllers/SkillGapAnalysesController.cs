@@ -26,6 +26,9 @@ namespace Backend_InternPortal.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateSkillGapAnalyses([FromBody] GenerateSkillGapAnalysesRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.SkillGapAnalysisGoal))
+                return BadRequest("SkillGapAnalysisGoal cannot be empty.");
+
             // 1. Fetch complete profile
             var profile = await _context.Profiles
                 .Include(p => p.Educations)
@@ -37,39 +40,62 @@ namespace Backend_InternPortal.Controllers
             if (profile == null)
                 return NotFound("Profile not found for given UserId");
 
-            // 🔹 Remove existing skill gap analyses for this user
-            var existingAnalyses = _context.SkillGapAnalyses.Where(s => s.UserId == request.UserId);
+            // 2. Delete existing analyses for the current SkillGapAnalysisGoal
+            var existingAnalyses = _context.SkillGapAnalyses
+                .Where(s => s.UserId == request.UserId && s.SkillGapAnalysisGoal == request.SkillGapAnalysisGoal);
+
             if (existingAnalyses.Any())
             {
                 _context.SkillGapAnalyses.RemoveRange(existingAnalyses);
                 await _context.SaveChangesAsync();
             }
 
-            // 2. Serialize profile safely
+            // 3. Delete obsolete analyses not in current CareerGoal and not equal to current SkillGapAnalysisGoal
+            if (!string.IsNullOrWhiteSpace(profile.CareerGoal))
+            {
+                var activeGoals = profile.CareerGoal
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(g => g.Trim())
+                    .ToList();
+
+                var obsoleteAnalyses = _context.SkillGapAnalyses
+                    .Where(s => s.UserId == request.UserId
+                                && !activeGoals.Contains(s.SkillGapAnalysisGoal)
+                                && s.SkillGapAnalysisGoal != request.SkillGapAnalysisGoal);
+
+                if (obsoleteAnalyses.Any())
+                {
+                    _context.SkillGapAnalyses.RemoveRange(obsoleteAnalyses);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            // 4. Serialize profile safely
             var profileJson = JsonConvert.SerializeObject(profile,
                 Formatting.None,
                 new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
-            // 3. Build user prompt
+            // 5. Build user prompt
             var userPrompt = $@"
-Generate {request.Count} skill gap analyses for the following profile.
-Each analysis must follow this JSON schema and title is a skill and description means how skill  will help and keep SkillGapAnalysisId = 0 every time :
+Generate {request.Count} skill gap analyses for the following profile and goal.
+Each analysis must follow this JSON schema and keep SkillGapAnalysisId = 0 every time :
 
 [
   {{
     ""SkillGapAnalysisId"": 0,
     ""UserId"": {request.UserId},
     ""Title"": ""string"",
-    ""Description"": ""string""
-    ""ResourceLink"": ""string""
+    ""Description"": ""string"",
+    ""ResourceLink"": ""string"",
+    ""SkillGapAnalysisGoal"": ""{request.SkillGapAnalysisGoal}""
   }}
 ]
 
 Profile Data: {profileJson}
-Career Goal: {profile.CareerGoal}
+Skill Gap Analysis Goal: {request.SkillGapAnalysisGoal}
 ";
 
-            // 4. Call Gemini API
+            // 6. Call Gemini API
             var geminiUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_config["Gemini:ApiKey"]}";
 
             var payload = new
@@ -105,7 +131,7 @@ Career Goal: {profile.CareerGoal}
 
             string aiContent = geminiResponse.candidates[0].content.parts[0].text.ToString();
 
-            // 5. Clean AI response (strip ```json fences if present)
+            // 7. Clean AI response (strip ```json fences if present)
             aiContent = aiContent.Trim();
             if (aiContent.StartsWith("```"))
             {
@@ -115,7 +141,7 @@ Career Goal: {profile.CareerGoal}
                     aiContent = aiContent.Substring(firstNewLine + 1, lastFence - firstNewLine - 1).Trim();
             }
 
-            // 6. Deserialize into SkillGapAnalysis
+            // 8. Deserialize into SkillGapAnalysis
             List<SkillGapAnalysis>? analyses;
             try
             {
@@ -129,17 +155,18 @@ Career Goal: {profile.CareerGoal}
             if (analyses == null || !analyses.Any())
                 return BadRequest("No skill gap analyses parsed from AI response");
 
-            // 7. Ensure UserId is set
+            // 9. Ensure UserId, SkillGapAnalysisGoal, and defaults
             foreach (var analysis in analyses)
             {
                 analysis.UserId = request.UserId;
+                analysis.SkillGapAnalysisGoal = request.SkillGapAnalysisGoal;
             }
 
-            // 8. Save skill gap analyses to DB
+            // 10. Save analyses to DB
             _context.SkillGapAnalyses.AddRange(analyses);
             await _context.SaveChangesAsync();
 
-            // 9. Return saved analyses
+            // 11. Return saved analyses
             return Ok(analyses);
         }
 
@@ -161,5 +188,6 @@ Career Goal: {profile.CareerGoal}
     {
         public int UserId { get; set; }
         public int Count { get; set; } = 5;
+        public string SkillGapAnalysisGoal { get; set; } = string.Empty;
     }
 }
