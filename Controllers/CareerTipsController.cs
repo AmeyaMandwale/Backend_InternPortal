@@ -331,12 +331,19 @@ Guidelines:
                 .Take(request.Count)
                 .ToList();
 
-            // 9. Save career tips to DB
-            _context.CareerTips.AddRange(uniqueTips);
+            // 9. Save career tips to DB (Option 2 fix)
+            var newTips = uniqueTips.Select(t => new CareerTip
+            {
+                UserId = request.UserId,
+                Description = t.Description
+            }).ToList();
+
+            _context.CareerTips.AddRange(newTips);
             await _context.SaveChangesAsync();
 
             // 10. Return saved career tips
-            return Ok(uniqueTips);
+            return Ok(newTips);
+
         }
 
         [HttpGet("{userId}")]
