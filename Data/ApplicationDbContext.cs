@@ -25,10 +25,6 @@ namespace InternConnect_Backend.Data
 
         public DbSet<CareerTip> CareerTips { get; set; }
 
-
-
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
