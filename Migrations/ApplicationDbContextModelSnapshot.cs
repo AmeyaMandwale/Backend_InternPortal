@@ -100,6 +100,40 @@ namespace Backend_Project.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.CalendarEvent", b =>
+                {
+                    b.Property<int>("EventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("EventId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)");
+
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CalendarEvents");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.CareerTip", b =>
                 {
                     b.Property<int>("CareerTipId")
@@ -477,6 +511,17 @@ namespace Backend_Project.Migrations
                 });
 
             modelBuilder.Entity("InternConnect_Backend.Models.Activity", b =>
+                {
+                    b.HasOne("InternConnect_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("InternConnect_Backend.Models.CalendarEvent", b =>
                 {
                     b.HasOne("InternConnect_Backend.Models.User", "User")
                         .WithMany()

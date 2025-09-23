@@ -25,6 +25,12 @@ namespace InternConnect_Backend.Data
 
         public DbSet<CareerTip> CareerTips { get; set; }
 
+        public DbSet<CalendarEvent> CalendarEvents { get; set; }
+
+
+
+
+
 
         public DbSet<MockTest> MockTests { get; set; }
 
