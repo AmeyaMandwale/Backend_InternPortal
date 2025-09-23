@@ -25,6 +25,17 @@ namespace InternConnect_Backend.Data
 
         public DbSet<CareerTip> CareerTips { get; set; }
 
+
+        public DbSet<MockTest> MockTests { get; set; }
+
+
+
+
+
+
+
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -75,6 +86,11 @@ namespace InternConnect_Backend.Data
                 .HasForeignKey(u => u.UserId);
 
             modelBuilder.Entity<CareerTip>()
+                .HasOne(u => u.User)
+                .WithMany()
+                .HasForeignKey(u => u.UserId);
+
+            modelBuilder.Entity<MockTest>()
                 .HasOne(u => u.User)
                 .WithMany()
                 .HasForeignKey(u => u.UserId);
