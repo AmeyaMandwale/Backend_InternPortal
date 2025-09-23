@@ -162,6 +162,55 @@ namespace Backend_Project.Migrations
                     b.ToTable("Educations");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.MockTest", b =>
+                {
+                    b.Property<int>("QuestionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("QuestionId"));
+
+                    b.Property<string>("CorrectAnswer")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Explanation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Option1")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Option2")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Option3")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Option4")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("QuestionNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("QuestionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MockTests");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.Opportunity", b =>
                 {
                     b.Property<int>("OpportunityId")
@@ -458,6 +507,17 @@ namespace Backend_Project.Migrations
                         .IsRequired();
 
                     b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("InternConnect_Backend.Models.MockTest", b =>
+                {
+                    b.HasOne("InternConnect_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InternConnect_Backend.Models.Opportunity", b =>

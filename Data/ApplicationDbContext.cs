@@ -25,6 +25,11 @@ namespace InternConnect_Backend.Data
 
         public DbSet<CareerTip> CareerTips { get; set; }
 
+        public DbSet<MockTest> MockTests { get; set; }
+
+
+
+
 
 
 
@@ -79,6 +84,11 @@ namespace InternConnect_Backend.Data
                 .HasForeignKey(u => u.UserId);
 
             modelBuilder.Entity<CareerTip>()
+                .HasOne(u => u.User)
+                .WithMany()
+                .HasForeignKey(u => u.UserId);
+
+            modelBuilder.Entity<MockTest>()
                 .HasOne(u => u.User)
                 .WithMany()
                 .HasForeignKey(u => u.UserId);
