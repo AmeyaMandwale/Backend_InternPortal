@@ -27,6 +27,8 @@ namespace InternConnect_Backend.Data
 
         public DbSet<CalendarEvent> CalendarEvents { get; set; }
 
+        public DbSet<MarketTrendAnalysis> MarketTrendAnalyses { get; set; }
+
 
 
 

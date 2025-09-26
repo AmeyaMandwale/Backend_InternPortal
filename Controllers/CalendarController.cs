@@ -47,6 +47,7 @@ namespace InternConnect_Backend.Controllers
         }
 
         // ✅ POST: api/calendar (create new event)
+        [HttpPost]
         public async Task<ActionResult<CalendarEvent>> PostEvent(CalendarEvent calendarEvent)
         {
             // Ensure StartTime < EndTime
