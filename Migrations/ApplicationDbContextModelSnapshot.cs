@@ -196,6 +196,52 @@ namespace Backend_Project.Migrations
                     b.ToTable("Educations");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.MarketTrendAnalysis", b =>
+                {
+                    b.Property<int>("TrendId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("TrendId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Growth")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<string>("Industry")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("SalaryTrend")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TrendId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MarketTrendAnalyses");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.MockTest", b =>
                 {
                     b.Property<int>("QuestionId")
@@ -552,6 +598,17 @@ namespace Backend_Project.Migrations
                         .IsRequired();
 
                     b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("InternConnect_Backend.Models.MarketTrendAnalysis", b =>
+                {
+                    b.HasOne("InternConnect_Backend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InternConnect_Backend.Models.MockTest", b =>
