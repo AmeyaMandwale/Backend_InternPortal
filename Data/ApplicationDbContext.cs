@@ -31,6 +31,7 @@ namespace InternConnect_Backend.Data
 
 
 
+        public DbSet<ApplicationRating> ApplicationRatings { get; set; }
 
 
 
