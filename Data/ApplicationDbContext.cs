@@ -29,7 +29,7 @@ namespace InternConnect_Backend.Data
 
         public DbSet<MarketTrendAnalysis> MarketTrendAnalyses { get; set; }
 
-
+        public DbSet<Mentor> Mentors { get; set; }
 
         public DbSet<ApplicationRating> ApplicationRatings { get; set; }
 

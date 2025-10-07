@@ -190,7 +190,7 @@ namespace Backend_InternPortal.Controllers
 
 
         // ✅ Delete Profile (and nested entities by cascade)
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}")]    
         public async Task<IActionResult> DeleteProfile(int id)
         {
             var profile = await _context.Profiles

@@ -265,6 +265,48 @@ namespace Backend_Project.Migrations
                     b.ToTable("MarketTrendAnalyses");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.Mentor", b =>
+                {
+                    b.Property<int>("MentorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("MentorId"));
+
+                    b.Property<bool>("Approved")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("Cost")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<int>("Experience")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Organisation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ProfilePhoto")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("MentorId");
+
+                    b.ToTable("Mentors");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.MockTest", b =>
                 {
                     b.Property<int>("QuestionId")
