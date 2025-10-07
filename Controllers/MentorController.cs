@@ -61,9 +61,9 @@ namespace Backend_InternPortal.Controllers
             _context.Entry(existingMentor).CurrentValues.SetValues(mentor);
 
             // ✅ Keep old photo if frontend sends empty string
-            if (string.IsNullOrEmpty(mentor.ProfilePhoto))
+            if (string.IsNullOrEmpty(mentor.Photo))
             {
-                _context.Entry(existingMentor).Property(m => m.ProfilePhoto).IsModified = false;
+                _context.Entry(existingMentor).Property(m => m.Photo).IsModified = false;
             }
 
             await _context.SaveChangesAsync();
