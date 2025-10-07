@@ -290,6 +290,14 @@ namespace Backend_Project.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Linkedin")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Mobile")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -298,7 +306,7 @@ namespace Backend_Project.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("ProfilePhoto")
+                    b.Property<string>("Photo")
                         .IsRequired()
                         .HasColumnType("longtext");
 

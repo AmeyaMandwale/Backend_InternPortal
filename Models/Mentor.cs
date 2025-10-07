@@ -21,7 +21,12 @@ namespace InternConnect_Backend.Models
         [Required]
         public decimal Cost { get; set; }    // Mentorship cost or fee
 
-        public string ProfilePhoto { get; set; } = string.Empty; // URL or file path
+        public string Photo { get; set; } = string.Empty; // URL or file path
+
+        public string Linkedin { get; set; } = string.Empty; // URL or file path
+
+
+        public string Mobile { get; set; } = string.Empty;
 
         public string Bio { get; set; } = string.Empty;  // Short description or background
 
