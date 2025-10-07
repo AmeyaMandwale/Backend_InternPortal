@@ -100,6 +100,29 @@ namespace Backend_Project.Migrations
                     b.ToTable("Activities");
                 });
 
+            modelBuilder.Entity("InternConnect_Backend.Models.ApplicationRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("RatedOn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApplicationRatings");
+                });
+
             modelBuilder.Entity("InternConnect_Backend.Models.CalendarEvent", b =>
                 {
                     b.Property<int>("EventId")
