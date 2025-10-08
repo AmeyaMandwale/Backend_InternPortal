@@ -8,24 +8,17 @@ namespace InternConnect_Backend.Models
     {
         [Key]
         public int MentorId { get; set; }  // Primary Key
-
         [Required]
         public string Name { get; set; } = string.Empty;
-
         [Required]
         public string Organisation { get; set; } = string.Empty;
-
         [Required]
         public int Experience { get; set; }  // in years
-
         [Required]
         public decimal Cost { get; set; }    // Mentorship cost or fee
-
         public string Photo { get; set; } = string.Empty; // URL or file path
-
         public string Linkedin { get; set; } = string.Empty; // URL or file path
-
-
+        public string Email { get; set; } = string.Empty;
         public string Mobile { get; set; } = string.Empty;
 
         public string Bio { get; set; } = string.Empty;  // Short description or background

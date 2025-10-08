@@ -283,6 +283,10 @@ namespace Backend_Project.Migrations
                     b.Property<decimal>("Cost")
                         .HasColumnType("decimal(65,30)");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<int>("Experience")
                         .HasColumnType("int");
 
