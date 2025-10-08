@@ -71,6 +71,7 @@ namespace Backend_InternPortal
                         .AllowAnyHeader()
                         .AllowAnyMethod());
             });
+            builder.Services.AddScoped<InternConnect_Backend.Services.EmailService>();
 
             var app = builder.Build();
 

@@ -5,6 +5,7 @@ using InternConnect_Backend.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using InternConnect_Backend.Services;
 
 namespace Backend_InternPortal.Controllers
 {
@@ -13,10 +14,13 @@ namespace Backend_InternPortal.Controllers
     public class MentorController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly EmailService _emailService;
 
-        public MentorController(ApplicationDbContext context)
+        public MentorController(ApplicationDbContext context, EmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
+
         }
 
         // ✅ Get All Mentors
@@ -93,7 +97,7 @@ namespace Backend_InternPortal.Controllers
         }
 
         // ✅ Approve or Reject Mentor
-        [HttpPut("{id}/approve")]
+       [HttpPut("{id}/approve")]
         public async Task<IActionResult> ApproveMentor(int id, [FromQuery] bool approve)
         {
             var mentor = await _context.Mentors.FindAsync(id);
@@ -104,7 +108,35 @@ namespace Backend_InternPortal.Controllers
             mentor.Approved = approve;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = $"Mentor {(approve ? "approved" : "rejected")} successfully." });
+            // ✅ Send email based on approval
+            string subject, body;
+
+            if (approve)
+            {
+                subject = "🎉 Mentor Application Approved!";
+                body = $@"
+                    <h3>Dear {mentor.Name},</h3>
+                    <p>Congratulations! Your application to become a mentor on <b>InternConnect</b> has been approved.</p>
+                    <p>You can now log in and start mentoring students.</p>
+                    <br/>
+                    <p>Best regards,<br/>InternConnect Team</p>
+                ";
+            }
+            else
+            {
+                subject = "❌ Mentor Application Rejected";
+                body = $@"
+                    <h3>Dear {mentor.Name},</h3>
+                    <p>We regret to inform you that your application to become a mentor on <b>InternConnect</b> has been rejected at this time.</p>
+                    <p>You may contact the admin for more details or reapply later.</p>
+                    <br/>
+                    <p>Best regards,<br/>InternConnect Team</p>
+                ";
+            }
+
+            await _emailService.SendEmailAsync(mentor.Email, subject, body);
+
+            return Ok(new { message = $"Mentor {(approve ? "approved" : "rejected")} and email sent successfully." });
         }
     }
 }
