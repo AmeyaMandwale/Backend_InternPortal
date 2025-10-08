@@ -1,14 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 using InternConnect_Backend.Data;
 using InternConnect_Backend.Models;
-using System.Threading.Tasks;
-using System;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Backend_InternPortal.Controllers
 {
@@ -82,14 +82,16 @@ namespace Backend_InternPortal.Controllers
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var jwt = tokenHandler.WriteToken(token);
-
+            // ADMIN MAIL = admin@gmail.com
+            // ADMIN PASSWORD = Admin@123
             return Ok(new
             {
                 message = "Login successful",
-                name=user.Name,
+                name = user.Name,
                 userid = user.UserId,
                 email = user.Email,
-                token = jwt
+                token = jwt,
+                role = user.Role,
             });
         }
     }
