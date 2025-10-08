@@ -97,46 +97,28 @@ namespace Backend_InternPortal.Controllers
         }
 
         // ✅ Approve or Reject Mentor
-       [HttpPut("{id}/approve")]
+        [HttpPut("{id}/approve")]
         public async Task<IActionResult> ApproveMentor(int id, [FromQuery] bool approve)
         {
             var mentor = await _context.Mentors.FindAsync(id);
-
             if (mentor == null)
                 return NotFound(new { message = $"No mentor found with ID {id}" });
 
-            mentor.Approved = approve;
-            await _context.SaveChangesAsync();
-
-            // ✅ Send email based on approval
-            string subject, body;
-
             if (approve)
             {
-                subject = "🎉 Mentor Application Approved!";
-                body = $@"
-                    <h3>Dear {mentor.Name},</h3>
-                    <p>Congratulations! Your application to become a mentor on <b>InternConnect</b> has been approved.</p>
-                    <p>You can now log in and start mentoring students.</p>
-                    <br/>
-                    <p>Best regards,<br/>InternConnect Team</p>
-                ";
+                mentor.Approved = true;
+                await _context.SaveChangesAsync();
+                await _emailService.SendEmailAsync(mentor.Email, "Mentor Approved", "Your mentor request was approved.");
             }
             else
             {
-                subject = "❌ Mentor Application Rejected";
-                body = $@"
-                    <h3>Dear {mentor.Name},</h3>
-                    <p>We regret to inform you that your application to become a mentor on <b>InternConnect</b> has been rejected at this time.</p>
-                    <p>You may contact the admin for more details or reapply later.</p>
-                    <br/>
-                    <p>Best regards,<br/>InternConnect Team</p>
-                ";
+                _context.Mentors.Remove(mentor); // ✅ Remove from DB
+                await _context.SaveChangesAsync();
+                await _emailService.SendEmailAsync(mentor.Email, "Mentor Rejected", "Your mentor request was rejected.");
             }
 
-            await _emailService.SendEmailAsync(mentor.Email, subject, body);
-
-            return Ok(new { message = $"Mentor {(approve ? "approved" : "rejected")} and email sent successfully." });
+            return Ok(new { message = $"Mentor {(approve ? "approved" : "rejected")} successfully." });
         }
+
     }
 }
